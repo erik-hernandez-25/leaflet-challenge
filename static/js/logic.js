@@ -1,32 +1,31 @@
-console.log("jsloaded")
 
-/*Setting the map to center around the middle of the United States and attaching a zoom level of 4 so that the continental United States is showing */
+/*Setting the map */
 var myMap = L.map('mapid', {
-    center: [-65.00, -10.2747],
+    center: [0,0],
     zoom: 4
 
 });
 
-/*https://api.mapbox.com/{endpoint}?access_token={your_access_token}*/
-/* Using Leaflet's street map to as the background for our analysis */
+
+/* MAPBOX BASE LAYER IN BLACK STYLE AS BACKGROUND */
 var mapboxTiles = L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
     attribution: '© <a href="https://www.mapbox.com/feedback/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    tileSize: 512,
     maxZoom: 18,
     id: "dark-v10",
     accessToken: API_KEY
 }).addTo(myMap);
 
-/* This allows us to call in the URL for earthquakes in the past seven days and set it to the global variable URL.  If we want to change the dimensions of the data
-that we are pulling in, this would be the place to change that */
 
-var URL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_month.geojson"
+/* Calling to geojson from latest month over 4.5 magnitude*/
+var URL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_month.geojson";
 
-/* Bringing in the dataset and then placing markers with appropriate size and color related to the magnitude of the quake */
-d3.json(URL, function (data) {
+/* collecting dataset using d3.json function and  */
+d3.json(URL).then(function(data) {
+    
+    // extract only the features (each earthquake) from geojson
     let earthquakes = data.features;
-    console.log(earthquakes);
-    /*Sets up our color scheme for earthquakes */
+   
+    /*Sets up our color scheme for earthquakes depending on their magnitude*/
     let color = {
         level1: "#3c0",
         level2: "#9f6",
@@ -34,7 +33,7 @@ d3.json(URL, function (data) {
         level4: "#f93",
         level5: "#c60",
         level6: "#c00"
-    }
+    };
 
     /* For each of the earthquakes, we are now identifying the lat/long and assessing a severity color to the earthquake */
 
@@ -55,10 +54,10 @@ d3.json(URL, function (data) {
             fillColor = color.level2;
         } else {
             fillColor = color.level1;
-        }
+        };
+        console.log(latitude);
 
-        /* The radius of each circle will be determined on an exponential scale based on the size of the magnitude.
-         I chose to use exponential so that larger earthquakes will have a much higher radius than smaller earthquakes */
+        /* Circle marker for each earthquake defined by magnitude with exponential 2 */
         var epicenter = L.circleMarker([latitude, longitude], {
             radius: magnitude ** 2,
             color: "black",
@@ -69,14 +68,14 @@ d3.json(URL, function (data) {
         epicenter.addTo(myMap);
 
 
-        /* Set up labels as a pop-up when we use the mouse to point to one of the circles */
+        /* Labels as a pop-up */
 
         epicenter.bindPopup("<h3> " + new Date(earthquakes[i].properties.time) + "</h3><h4>Magnitude: " + magnitude +
             "<br>Location: " + earthquakes[i].properties.place + "</h4><br>");
 
     }
 
-    /* Setting the legend to appear in the bottom right of our chart */
+    /* Legend ing Bottom Right */
     var legend = L.control({
         position: 'bottomright'
     });
@@ -92,4 +91,5 @@ d3.json(URL, function (data) {
         return div;
     }
     legend.addTo(myMap);
+
 });
